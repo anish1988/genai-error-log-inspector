@@ -1,0 +1,41 @@
+clusters:
+  - name: icDial-Cluster-A
+    enabled: false
+    type: sftp
+    host: "10.10.1.15"
+    port: 22
+    username: "loguser"
+    key_path: "/secrets/id_rsa"
+    log_path: "/var/log/vicidial"
+    log_types:
+      - type: apache
+        path: /cluster1/apache_logs
+      - type: mysql
+        path: /cluster1/mysql_logs
+
+  - name: Local-Error-Logs
+    enabled: true
+    type: local
+    log_path: "/var/www/html/"
+    log_types:
+      - type: apache
+        path: /var/www/html
+        file_pattern: "error_*.log"   # Only pick files that start with error_
+      - type: mysql
+        path: /var/www/html
+        file_pattern: "error_*.log"   # Only pick files that start with error_
+      - type: laravel
+        path: /var/www/html
+        file_pattern: "error_*.log"   # Only pick files that start with error_
+
+
+  - name: icDial-Cluster-B
+    enabled: false
+    type: local
+    log_path: "./sample_logs"
+    log_types:
+      - type: apache
+        path: /cluster1/apache_logs
+      - type: mysql
+        path: /cluster1/mysql_logs
+
