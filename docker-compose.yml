@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: genai-error-log-inspector
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - .env
+    volumes:
+      - ${LOCAL_LOG_PATH}:/host_logs:ro
+      - ./config:/app/config:ro
+      - ./processed_output:/app/processed_output
+    depends_on:
+      - mysql
+    command: >
+      bash -lc "python -m services.ingestion_service.main & uvicorn services.api.app:app --host 0.0.0.0 --port 8000 --reload"
+    ports:
+      - "8000:8000"
+    develop:
+        watch:
+          - action: sync
+            path: .
+            target: /app
+          - action: rebuild
+            path: requirements.txt
+
+  mysql:
+    image: mysql:8.0
+    container_name: genai-mysql
+    environment:
+      MYSQL_DATABASE: asterisk
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root@123Abc
+      MYSQL_ROOT_PASSWORD: root@123Abc
+    volumes:
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+
+volumes:
+  mysql_data:

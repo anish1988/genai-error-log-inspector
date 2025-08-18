@@ -1,0 +1,3 @@
+2025-08-17 11:09:22 [INFO] ExecutionLogger: Starting ingestion service...
+2025-08-17 11:09:22 [INFO] ExecutionLogger: ClusterManager initialized with config: config/clusters.yaml
+2025-08-17 11:09:22 [INFO] ExecutionLogger: Database Config: {'host': 'mysql', 'port': 3306, 'user': 'root', 'password': 'root@123Abc', 'database': 'asterisk'}

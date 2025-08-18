@@ -1,15 +1,22 @@
+
 import re
+from typing import Dict
 from .base_parser import BaseParser
 
-class RegexParser(BaseParser):
-    ERROR_PATTERN = re.compile(r"\[(?P<timestamp>.*?)\]\s+(?P<level>ERROR|EXCEPTION)\s+(?P<message>.+)")
+DEFAULT_PATTERNS = [
+    re.compile(r'^(?P<ts>\S+\s+\S+)\s+(?P<level>ERROR|CRITICAL|FATAL|Exception)\s+(?P<msg>.+)$', re.I),
+    re.compile(r'(?P<level>ERROR|FATAL|CRITICAL)\s*[:\-]\s*(?P<msg>.+)$', re.I)
+]
 
-    def parse(self, log_content):
-        results = []
-        for match in self.ERROR_PATTERN.finditer(log_content):
-            results.append({
-                "timestamp": match.group("timestamp"),
-                "level": match.group("level"),
-                "message": match.group("message"),
-            })
-        return results
+class RegexParser(BaseParser):
+    def __init__(self, patterns=None):
+        self.patterns = patterns or DEFAULT_PATTERNS
+
+    def parse(self, raw_line: str) -> Dict:
+        for pat in self.patterns:
+            m = pat.search(raw_line)
+            if m:
+                d = m.groupdict()
+                d["raw"] = raw_line
+                return d
+        return {"raw": raw_line, "msg": raw_line, "level": "ERROR"}

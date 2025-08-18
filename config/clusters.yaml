@@ -1,3 +1,6 @@
+schedule:
+  every_minutes: 5
+  parallel: false
 clusters:
   - name: icDial-Cluster-A
     enabled: false
@@ -8,9 +11,9 @@ clusters:
     key_path: "/secrets/id_rsa"
     log_path: "/var/log/vicidial"
     log_types:
-      - type: apache
+      - name: apache
         path: /cluster1/apache_logs
-      - type: mysql
+      - name: mysql
         path: /cluster1/mysql_logs
 
   - name: Local-Error-Logs
@@ -18,15 +21,19 @@ clusters:
     type: local
     log_path: "/var/www/html/"
     log_types:
-      - type: apache
+      - name: apache
         path: /var/www/html
-        file_pattern: "error_*.log"   # Only pick files that start with error_
-      - type: mysql
+        pattern: "error_*.log"   # Only pick files that start with error_
+        include_regex: "(ERROR|CRITICAL|FATAL|Exception|Traceback)"
+        exclude_regex: "(INFO|DEBUG)"
+        parser: apache_regex
+      - name: mysql
         path: /var/www/html
-        file_pattern: "error_*.log"   # Only pick files that start with error_
-      - type: laravel
+        pattern: "error_*.log"   # Only pick files that start with error_
+      - name: laravel
         path: /var/www/html
-        file_pattern: "error_*.log"   # Only pick files that start with error_
+        pattern: "error_*.log"   # Only pick files that start with error_
+        parser: mysql_regex
 
 
   - name: icDial-Cluster-B
@@ -34,8 +41,13 @@ clusters:
     type: local
     log_path: "./sample_logs"
     log_types:
-      - type: apache
+      - name: apache
         path: /cluster1/apache_logs
-      - type: mysql
+      - name: mysql
         path: /cluster1/mysql_logs
+      - name: asterisk
+        path: "/var/log/asterisk"
+        file_glob: "full-*.log"
+        include_regex: "(ERROR|FAIL|Exception)"
+        parser: asterisk_regex
 
