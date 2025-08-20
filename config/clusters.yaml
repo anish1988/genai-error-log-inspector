@@ -19,19 +19,19 @@ clusters:
   - name: Local-Error-Logs
     enabled: true
     type: local
-    log_path: "/var/www/html/"
+    log_path: "/host_logs"
     log_types:
       - name: apache
-        path: /var/www/html
+        path: /host_logs
         pattern: "error_*.log"   # Only pick files that start with error_
         include_regex: "(ERROR|CRITICAL|FATAL|Exception|Traceback)"
         exclude_regex: "(INFO|DEBUG)"
         parser: apache_regex
       - name: mysql
-        path: /var/www/html
+        path: /host_logs
         pattern: "error_*.log"   # Only pick files that start with error_
       - name: laravel
-        path: /var/www/html
+        path: /host_logs
         pattern: "error_*.log"   # Only pick files that start with error_
         parser: mysql_regex
 

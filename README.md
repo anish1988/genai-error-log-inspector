@@ -10,6 +10,7 @@ genai-error-log-inspector/
 │   │   ├── main.py                # CLI / service entry
 │   │   ├── config.py
 │   │   ├── cluster_manager.py     # selects clusters (SRP)
+│   ├── execution_logger.py   # New central logging class
 │   │   ├── ingestors/
 │   │   │   ├── base.py            # Ingestor interface
 │   │   │   ├── sftp_ingestor.py

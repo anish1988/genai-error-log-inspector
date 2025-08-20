@@ -75,25 +75,32 @@ def make_job():
         logger.info("Processing cluster=%s, cluster type=%s, log_type=%s", cluster.name, cluster, lt.name)
         ingestor = cm.ingestor_for(cluster)
         print(f"Ingestor Initialization : {ingestor}")
+        logger.info("Ingestor Initialization ingestor=%s ",ingestor)
         # Acceptance Criterion (3): pick most recent file only
         logger.info("Latest file calling before cluster=%s, path=%s, FileGlob=%s", cluster.name, lt.path, lt.file_glob)
         latest = ingestor.latest_file(lt.path, lt.file_glob)
         print(f"latest file checkig: {latest}")
+        logger.info(f"[main] latest file checkig: {latest} ")
         if not latest:
             print(f"No log file found for cluster, log_type : {cluster.name} ")
             logger.warning("No log file found for cluster=%s, log_type=%s", cluster.name, lt.name)
             return
 
         print(f"you are here for some reason: {cluster.name}")
+        logger.info(f"[main] you are here for some reason: {cluster.name} ")
         file_ident = str(latest)
         # Derive a stable file key (same as input filename)
         file_key = Path(file_ident).name
+        logger.info(f"[main] File key: {file_key} ")
+        logger.info(f"[main] print SM : {sm} ")
         start_offset = sm.get_offset(cluster.name, lt.name, file_key)
-
+        logger.info(f"[main] start_offset : {start_offset} ")
         last_offset = start_offset
         new_lines_found = 0
         structured = []
-
+        logger.info(f"[main] file_ident : {file_ident} start_offset {start_offset} and include_regrex glob {lt.include_regex}")
+        file_path = Path(file_ident)
+        logger.info(f"[main] file_path key: {file_path} ")
         try:
             for raw, new_offset in ingestor.incremental_read(
                 file_ident, start_offset, lt.include_regex, lt.exclude_regex
@@ -101,9 +108,10 @@ def make_job():
                 new_lines_found += 1
                 structured.append(parser.parse(raw))
                 last_offset = new_offset
-
+            logger.info(f"[main] New line found : {new_lines_found} last_offset {last_offset} and new_offset glob {last_offset}")
             if new_lines_found:
                 logger.info("Parsed %d new lines from %s", new_lines_found, file_key)
+                logger.info(f"[main] Analyzer run calling  : {structured} cluster_name {cluster.name} and log_type glob {lt.name} source_file {file_key}")
                 result_text = analyzer.run(structured, cluster_name=cluster.name, log_type=lt.name, source_file=file_key)
                 # Save output to different folder with SAME filename
                 out_dir = Path(OUTPUT_BASE) / cluster.name / lt.name

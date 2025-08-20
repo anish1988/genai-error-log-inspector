@@ -5,6 +5,7 @@ from mysql.connector import Error
 import json
 import os
 import datetime
+import logging
 
 
 class StateManager:
@@ -19,10 +20,38 @@ class StateManager:
         self.log_dir = log_dir
         os.makedirs(self.log_dir, exist_ok=True)
         print("DB CONFIG:", self.db_cfg)
+        # Setup logger
+         # Create logger for this class
+        self.logger = logging.getLogger("StateManager")
+        if self.debug:
+            self.logger.setLevel(logging.DEBUG)
+        else:
+            self.logger.setLevel(logging.INFO)
+
+        fh = logging.FileHandler(os.path.join(self.log_dir, "state_manager.log"))
+        fh.setLevel(logging.DEBUG)
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.DEBUG if debug else logging.INFO)
+
+        formatter = logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S"
+        )
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
+
+          # Add handler only if not already added
+        if not self.logger.handlers:
+            ch = logging.StreamHandler()
+            formatter = logging.Formatter("[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s")
+            ch.setFormatter(formatter)
+            self.logger.addHandler(ch)
+
+        self.logger.info("Initialized StateManager with DB config: %s", self.db_cfg)
         self._ensure_tables()
 
     def _get_conn(self):
-        print("DB CONFIG:", self.db_cfg)
+        print("DB CONFIG 123:", self.db_cfg)
         return mysql.connector.connect(
             host=self.db_cfg["host"],
             port=self.db_cfg["port"],
@@ -67,7 +96,8 @@ class StateManager:
             print(f"[StateManager] Error creating table: {e}")
             raise
 
-    def get_offset(self, cluster_name: str, log_type: str, file_key: str) -> int:
+    def get_offset1(self, cluster_name: str, log_type: str, file_key: str) -> int:
+        self.logger.debug("Anish Rai")
         """
         Returns last saved offset or 0 if not found.
         """
@@ -76,15 +106,37 @@ class StateManager:
         WHERE cluster_name = %s AND log_type = %s AND file_key = %s
         """
         try:
+            self.logger.debug("Executing Anis SQL: %s | values=%s", sql.strip(), (cluster_name, log_type, file_key))
             with self._get_conn() as conn:
                 with conn.cursor() as cur:
+                    self.logger.debug("Executing SQL: %s | values=%s", sql.strip(), (cluster_name, log_type, file_key))
                     cur.execute(sql, (cluster_name, log_type, file_key))
                     row = cur.fetchone()
                     return row[0] if row else 0
         except Error as e:
+            self.logger.error("Error reading offset: %s", e)
             print(f"[StateManager] Error reading offset: {e}")
             return 0
-
+     
+    def get_offset(self, cluster_name: str, log_type: str, file_key: str) -> int:
+        self.logger.debug("Entering get_offset()")
+        sql = """
+        SELECT offset_val FROM log_offsets
+        WHERE cluster_name = %s AND log_type = %s AND file_key = %s
+        """
+        try:
+            self.logger.debug("Executing SQL: %s | values=%s", sql.strip(), (cluster_name, log_type, file_key))
+            with self._get_conn() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(sql, (cluster_name, log_type, file_key))
+                    row = cur.fetchone()
+                    self.logger.debug("Fetched row: %s", row)
+                    #return row[0] if row else 0
+                    return 111
+        except Error as e:
+            self.logger.error("Error reading offset: %s", e)
+            return 0
+ 
     def upsert_offset(self, cluster_name: str, log_type: str, file_key: str, offset_val: int):
         """
         Inserts or updates offset for given file.

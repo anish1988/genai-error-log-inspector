@@ -21,19 +21,20 @@ class LocalIngestor(BaseIngestor):
         """
         logger.debug(f"[LocalIngestor] latest_file called with base_path={base_path}, file_glob={file_glob}")
         directory = Path(base_path)
-        logger.debug(f"[LocalIngestor] latest_file directory with base_path={base_path}, file_glob={file_glob}, directory={directory}")
+        logger.info(f"[LocalIngestor] latest_file directory with base_path={base_path}, file_glob={file_glob}, directory={directory}")
         if not directory.exists() or not directory.is_dir():
             logger.warning(f"[LocalIngestor] Directory {base_path} does not exist or is not a dir.")
             return None
 
         files = list(directory.glob(file_glob))
+        logger.info(f"[LocalIngestor] files {files} directory {directory} and file glob {file_glob}")
         if not files:
             logger.warning(f"[LocalIngestor] No files found in {base_path} with pattern {file_glob}")
             return None
 
         latest = max(files, key=lambda f: f.stat().st_mtime)
         logger.info(f"[LocalIngestor] Latest file selected: {latest}")
-        logger.debug(f"[LocalIngestor] latest_file directory with base_path={base_path}, file_glob={file_glob}, directory={directory}")
+        logger.info(f"[LocalIngestor] latest_file directory2 with base_path={base_path}, file_glob={file_glob}, directory={directory}")
         return str(latest)
 
     def incremental_read(
